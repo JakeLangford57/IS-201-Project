@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Flat Earth Boat Simulator - Government Warnings</title>
+
+<style>
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: monospace;
+    background: #87CEEB;
+}
+
+/* UI */
+#title {
+    position: absolute;
+    top: 10px;
+    left: 20px;
+    font-size: 28px;
+    z-index: 10;
+}
+
+#game {
+    width: 1200px;
+    height: 500px;
+    margin: auto;
+    overflow: hidden;
+    position: relative;
+    border: 3px solid black;
+    background: linear-gradient(#87CEEB 60%);
+}
+
+/* world container (moves) */
+#world {
+    position: absolute;
+    height: 100%;
+    width: 3000px;
+    background: #87CEEB;
+}
+
+/* boat player */
+#player {
+    position: absolute;
+    width: 60px;
+    height: 40px;
+    transition: transform 0.05s linear;
+}
+
+/* stick figure */
+.stick {
+    position: absolute;
+    width: 2px;
+    background: black;
+}
+
+.head {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: black;
+    position: absolute;
+    left: 25px;
+}
+
+/* boat */
+.boat {
+    position: absolute;
+    bottom: 0;
+    width: 60px;
+    height: 15px;
+    background: brown;
+    border-radius: 0 0 20px 20px;
+}
+
+/* OCEAN SURFACE */
+#ocean {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 2800px;
+    height: 200px;
+    background: linear-gradient(to bottom, #1e90ff, #187bcd);
+}
+
+/* land block */
+#land {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 600px;
+    height: 300px;
+    background: linear-gradient(to top, #2e7d32, #66bb6a);
+    border-right: 5px solid black;
+}
+
+/* WARNING SIGNS - sticking out of water */
+.warning-sign {
+    position: absolute;
+    bottom: 180px;
+    width: 140px;
+    cursor: pointer;
+    z-index: 20;
+    animation: bob 2s ease-in-out infinite;
+}
+
+.sign-post {
+    position: absolute;
+    bottom: -40px;
+    left: 65px;
+    width: 8px;
+    height: 70px;
+    background: #8B5A2B;
+    z-index: 1;
+}
+
+.sign-board {
+    position: absolute;
+    bottom: 20px;
+    background: #f5e6c4;
+    border: 4px solid #a0522d;
+    border-radius: 12px;
+    padding: 10px 8px;
+    font-size: 9px;
+    font-weight: bold;
+    text-align: center;
+    color: #8B0000;
+    width: 130px;
+    font-family: monospace;
+    box-shadow: 3px 3px 8px rgba(0,0,0,0.5);
+    z-index: 2;
+    backdrop-filter: blur(2px);
+}
+
+.sign-board::before {
+    content: "⚠️";
+    font-size: 14px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.sign-board p {
+    margin: 2px 0;
+    line-height: 1.3;
+}
+
+/* different sign styles */
+.sign-warning .sign-board {
+    background: #fff3cd;
+    border-color: #ff6600;
+    color: #cc3300;
+}
+
+.sign-danger .sign-board {
+    background: #ffcccc;
+    border-color: #ff0000;
+    color: #990000;
+    animation: pulseRed 1s ease-in-out infinite;
+}
+
+.sign-conspiracy .sign-board {
+    background: #d4f1f9;
+    border-color: #2c3e6d;
+    color: #1a2a4f;
+}
+
+@keyframes bob {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
+}
+
+@keyframes pulseRed {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,0,0,0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(255,0,0,0.2); }
+}
+
+/* clouds */
+.cloud {
+    position: absolute;
+    background: white;
+    width: 80px;
+    height: 40px;
+    border-radius: 40px;
+    opacity: 0.8;
+}
+
+/* game over */
+#gameOver {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    background: black;
+    color: white;
+    padding: 30px;
+    display: none;
+    z-index: 100;
+    border-radius: 20px;
+    text-align: center;
+    border: 3px solid #ff4444;
+}
+
+#gameOver button {
+    margin-top: 15px;
+    padding: 8px 20px;
+    font-size: 16px;
+    background: #2c6e2c;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-family: monospace;
+    border-radius: 30px;
+}
+
+/* shake */
+@keyframes shake {
+    0%{transform:translate(0)}
+    25%{transform:translate(5px)}
+    50%{transform:translate(-5px)}
+    75%{transform:translate(5px)}
+    100%{transform:translate(0)}
+}
+
+/* extra float effect for signs */
+.float-bob {
+    animation: bob 2.5s ease-in-out infinite;
+}
+</style>
+</head>
+
+<body>
+
+    <div id="title">🌍 Flat Earth Boat Simulator 🚫👁️</div>
+
+    <div id="game">
+    <div id="world">
+
+        <div id="ocean"></div>
+        <div id="land"></div>
+        
+        <!-- WARNING SIGNS STICKING OUT OF WATER - Government & NASA warnings -->
+        <div class="warning-sign sign-warning" style="left: 950px;" data-message="WARNING: U.S. Gov't restricted zone">
+            <div class="sign-post"></div>
+            <div class="sign-board">
+                <p>🚫 GOVERNMENT<br>WARNING 🚫</p>
+                <p style="font-size:7px">Authorized personnel only<br>Satellite surveillance active</p>
+            </div>
+        </div>
+        
+        <div class="warning-sign sign-conspiracy" style="left: 1350px;" data-message="NASA fake moon landing">
+            <div class="sign-post"></div>
+            <div class="sign-board">
+                <p>🛸 Message from NASA🛸</p>
+                <p>"The edge is a myth"<br> "Science has proved it" </p>
+                <p style="font-size:7px">Classified: Project Flat Horizon</p>
+            </div>
+        </div>
+        
+        <div class="warning-sign sign-danger" style="left: 1750px;" data-message="DANGER: Government cover-up ahead">
+            <div class="sign-post"></div>
+            <div class="sign-board">
+                <p>⚠️ ⚠️ ⚠️</p>
+                <p>ICE WALL AHEAD</p>
+                <p>TURN BACK OR BE<br>DETAINED BY AUTHORITIES</p>
+                <p style="font-size:7px">UN Treaty Zone 712 - No Entry</p>
+            </div>
+        </div>
+        
+        <div class="warning-sign sign-warning" style="left: 2150px;" data-message="NASA satellite monitoring this area">
+            <div class="sign-post"></div>
+            <div class="sign-board">
+                <p>📡 WARNING 📡</p>
+                <p>This area monitored by<br>NASA satellites & CIA</p>
+                <p>"The Earth is round" <br>"The Earth is round"</p>
+            </div>
+        </div>
+        
+        <div class="warning-sign sign-conspiracy" style="left: 2480px;" data-message="FINAL WARNING: The edge is real! NASA lied!">
+            <div class="sign-post"></div>
+            <div class="sign-board">
+                <p>🔥 FINAL WARNING 🔥</p>
+                <p>THE EDGE ISN'T REAL!</p>
+                <p>NASA tells the truth<br>TURN BACK NOW!!</p>
+                <p style="font-size:8px">❗ You WILL fall off ❗</p>
+            </div>
+        </div>
+        
+        <!-- Additional hidden floating messages that appear when close -->
+        <div id="floatingMsg" style="position: absolute; bottom: 250px; font-size: 14px; font-weight: bold; background: rgba(0,0,0,0.8); color: #ffaa44; padding: 6px 12px; border-radius: 20px; white-space: nowrap; pointer-events: none; z-index: 30; display: none; font-family: monospace;"></div>
+        
+        <div id="player">
+            <div class="head"></div>
+            <div class="stick" style="height:15px; left:29px; top:10px;"></div>
+            <div class="stick" style="height:10px; left:25px; top:25px; transform:rotate(30deg);"></div>
+            <div class="stick" style="height:10px; left:33px; top:25px; transform:rotate(-30deg);"></div>
+            <div class="boat"></div>
+        </div>
+        <div class="cloud" style="top:50px; left:300px;"></div>
+        <div class="cloud" style="top:100px; left:800px;"></div>
+        <div class="cloud" style="top:70px; left:1600px;"></div>
+        <div class="cloud" style="top:130px; left:2200px;"></div>
+        
+    </div>
+    </div>
+
+    <div id="gameOver">
+        <h2>🌊 You fell off the edge 🌊</h2>
+        <p>The government tried to warn you... NASA tried to tell you the Earth was round.</p>
+        <p style="font-size:12px; color:#ffaa66">"I told you so" - The Pentagon</p>
+        <button onclick="location.reload()">🚣 Restart Journey 🚣</button>
+    </div>
+
+    <script>
+    const player = document.getElementById("player");
+    const world = document.getElementById("world");
+    const gameOver = document.getElementById("gameOver");
+    const gameDiv = document.getElementById("game");
+    const floatingMsg = document.getElementById("floatingMsg");
+
+    let x = 300;
+    let y = 300;
+    let vx = 0;
+    let vy = 0;
+    let gravity = 0.5;
+    let jumping = false;
+    let running = true;
+    let camera = 0;
+
+    let keys = {};
+
+    document.addEventListener("keydown", e => {
+        keys[e.key] = true;
+        // prevent arrow keys from scrolling
+        if(e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === " " || e.key === "Space") {
+            e.preventDefault();
+        }
+    });
+    document.addEventListener("keyup", e => keys[e.key] = false);
+
+    // Store warning signs positions for proximity detection
+    const warningSigns = [];
+    const signElements = document.querySelectorAll('.warning-sign');
+    signElements.forEach((sign, idx) => {
+        const leftPos = parseFloat(sign.style.left);
+        warningSigns.push({
+            element: sign,
+            x: leftPos,
+            message: sign.getAttribute('data-message') || "WARNING: Government secret"
+        });
+    });
+
+    // Function to show floating warning when near a sign
+    let currentMsgTimeout = null;
+    function checkSignProximity() {
+        if(!running) return;
+        
+        let closestSign = null;
+        let closestDist = 150; // activation distance
+        
+        for(let sign of warningSigns) {
+            let dist = Math.abs(x - sign.x);
+            if(dist < closestDist) {
+                closestDist = dist;
+                closestSign = sign;
+            }
+        }
+        
+        if(closestSign && closestDist < 120) {
+            // Show warning message
+            let msgText = "";
+            if(closestSign.x < 1000) msgText = "🚨 GOVERNMENT WARNING: Turn back now! 🚨";
+            else if(closestSign.x < 1500) msgText = "👁️ NASA satellite watching you... They hide the edge! 👁️";
+            else if(closestSign.x < 2000) msgText = "⚠️ ICE WALL GUARDS APPROACHING! Government cover-up! ⚠️";
+            else if(closestSign.x < 2400) msgText = "📡 CIA Black Site nearby. They don't want you to see the truth! 📡";
+            else msgText = "💀 FINAL WARNING: THE EDGE IS REAL! NASA LIED! 💀";
+            
+            floatingMsg.style.display = "block";
+            floatingMsg.style.left = (camera > 0 ? x - camera + 400 : x - 100) + "px";
+            floatingMsg.style.bottom = "280px";
+            floatingMsg.innerHTML = msgText;
+            
+            // Make sign pulse more intensely
+            closestSign.element.style.animation = "pulseRed 0.5s ease-in-out infinite";
+            
+            if(currentMsgTimeout) clearTimeout(currentMsgTimeout);
+            currentMsgTimeout = setTimeout(() => {
+                if(floatingMsg) floatingMsg.style.display = "none";
+                if(closestSign) closestSign.element.style.animation = "bob 2s ease-in-out infinite";
+            }, 1800);
+        } else {
+            if(currentMsgTimeout === null) {
+                setTimeout(() => {
+                    if(floatingMsg && floatingMsg.style.display !== "none" && !running) return;
+                    if(floatingMsg) floatingMsg.style.display = "none";
+                }, 500);
+            }
+            // reset sign animations
+            for(let sign of warningSigns) {
+                sign.element.style.animation = "bob 2s ease-in-out infinite";
+            }
+        }
+    }
+
+    function update() {
+        if(!running) return;
+
+        // movement
+        if(keys["a"] || keys["ArrowLeft"]) vx = -5;
+        else if(keys["d"] || keys["ArrowRight"]) vx = 5;
+        else vx = 0;
+
+        if((keys[" "] || keys["ArrowUp"]) && !jumping){
+            vy = -10;
+            jumping = true;
+        }
+
+        vy += gravity;
+        x += vx;
+        y += vy;
+
+        // water surface
+        if(y > 300){
+            y = 300;
+            vy = 0;
+            jumping = false;
+        }
+
+        // block left land
+        if(x < 600){
+            x = 600;
+        }
+
+        // fall off edge
+        if(x > 2800){
+            running = false;
+            fall();
+        }
+
+        // camera follow
+        camera = x - 500;
+        if(camera < 0) camera = 0;
+        if(camera > 1800) camera = 1800; // max camera (world width 3000 - game width 1200)
+        world.style.transform = `translateX(${-camera}px)`;
+
+        // render player
+        player.style.left = x + "px";
+        player.style.top = y + "px";
+
+        // edge warning glow - intensifies near signs and edge
+        if(x > 2100){
+            let intensity = Math.min(1, (x - 2100) / 700);
+            gameDiv.style.boxShadow = `0 0 ${25 + intensity * 25}px rgba(255, 0, 0, ${0.6 + intensity * 0.4})`;
+            gameDiv.style.border = `3px solid rgb(255, ${Math.floor(80 - intensity * 60)}, 0)`;
+        } else if(x > 2300) {
+            gameDiv.style.boxShadow = "0 0 35px rgba(255, 30, 0, 0.9)";
+            gameDiv.style.border = "3px solid #ff3300";
+        } else if(x > 1800) {
+            gameDiv.style.boxShadow = "0 0 15px rgba(255, 100, 0, 0.5)";
+            gameDiv.style.border = "3px solid #ff8844";
+        } else {
+            gameDiv.style.boxShadow = "none";
+            gameDiv.style.border = "3px solid black";
+        }
+
+        // Tilt boat when near dangerous signs or edge
+        if(x > 2300) {
+            let tiltAmount = Math.min(12, (x - 2300) / 25);
+            player.style.transform = `rotate(${tiltAmount}deg)`;
+        } else if(x > 1800 && x < 2300) {
+            player.style.transform = `rotate(3deg)`;
+        } else {
+            player.style.transform = `rotate(0deg)`;
+        }
+
+        // Animate warning signs bobbing and also update their position relative to camera?
+        // They are in world space, no need to move individually - world container moves them.
+        // But we need to add extra visual effect: signs with glint when close
+        for(let sign of warningSigns) {
+            let distanceToSign = Math.abs(x - sign.x);
+            if(distanceToSign < 100) {
+                sign.element.style.filter = "drop-shadow(0 0 6px rgba(255,0,0,0.8))";
+                // Add extra rotation shake effect to sign
+                let shakeOffset = Math.sin(Date.now() * 0.02) * 2;
+                sign.element.style.transform = `translateY(${shakeOffset}px)`;
+            } else {
+                sign.element.style.filter = "";
+                sign.element.style.transform = "";
+            }
+        }
+
+        // Check if near any sign to display floating gov warning
+        checkSignProximity();
+        
+        // Extra: add a "NASA lies" floating text when crossing specific zones
+        if(x > 1700 && x < 1800 && running && Math.floor(Date.now() / 800) % 2 === 0) {
+            let tempMsg = document.createElement('div');
+            tempMsg.textContent = "🔍 'EARTH IS ROUND' - NASA PROPAGANDA 🔍";
+            tempMsg.style.position = "absolute";
+            tempMsg.style.left = (x - camera + 200) + "px";
+            tempMsg.style.bottom = "220px";
+            tempMsg.style.fontSize = "10px";
+            tempMsg.style.background = "rgba(0,0,0,0.7)";
+            tempMsg.style.color = "#ffaa66";
+            tempMsg.style.padding = "3px 8px";
+            tempMsg.style.borderRadius = "15px";
+            tempMsg.style.whiteSpace = "nowrap";
+            tempMsg.style.fontFamily = "monospace";
+            tempMsg.style.zIndex = "25";
+            tempMsg.style.pointerEvents = "none";
+            document.getElementById("world").appendChild(tempMsg);
+            setTimeout(() => tempMsg.remove(), 1200);
+        }
+
+        // parallax clouds
+        document.querySelectorAll(".cloud").forEach((c,i)=>{
+            c.style.transform = `translateX(${camera * (0.2 + i*0.1)}px)`;
+        });
+
+        requestAnimationFrame(update);
+    }
+
+    function fall(){
+        document.body.style.animation = "shake 0.3s";
+        
+        // Hide any floating message
+        if(floatingMsg) floatingMsg.style.display = "none";
+        
+        // Add dramatic message before falling
+        let warningMsg = document.createElement('div');
+        warningMsg.textContent = "⚠️ Governemnt agents approaching... ⚠️ YOU CHOSE THE TRUTH!";
+        warningMsg.style.position = "absolute";
+        warningMsg.style.top = "40%";
+        warningMsg.style.left = "50%";
+        warningMsg.style.transform = "translate(-50%, -50%)";
+        warningMsg.style.backgroundColor = "rgba(0,0,0,0.85)";
+        warningMsg.style.color = "#ff5533";
+        warningMsg.style.padding = "20px";
+        warningMsg.style.borderRadius = "30px";
+        warningMsg.style.fontSize = "18px";
+        warningMsg.style.fontWeight = "bold";
+        warningMsg.style.zIndex = "200";
+        warningMsg.style.textAlign = "center";
+        warningMsg.style.border = "3px solid red";
+        warningMsg.style.fontFamily = "monospace";
+        document.body.appendChild(warningMsg);
+        setTimeout(() => warningMsg.remove(), 1500);
+
+        let fallInterval = setInterval(()=>{
+            y += 10;
+            player.style.top = y + "px";
+            if(x > 2700){
+                player.style.transform = "rotate(25deg)";
+            } else {
+                player.style.transform = "rotate(0deg)";
+            }
+
+            if(y > 800){
+                clearInterval(fallInterval);
+                gameOver.style.display = "block";
+            }
+        }, 45);
+        
+        // Extra: add a fade effect on void
+        const voidArea = document.getElementById("void");
+        if(voidArea) {
+            voidArea.style.transition = "box-shadow 0.5s";
+            voidArea.style.boxShadow = "inset 0 0 50px rgba(255,0,0,0.8)";
+        }
+    }
+
+    // Start the game loop
+    update();
+    
+    // Add floating particle effect near signs (just for fun)
+    function createParticlesNearSigns() {
+        if(!running) return;
+        for(let sign of warningSigns) {
+            let distanceToSign = Math.abs(x - sign.x);
+            if(distanceToSign < 80 && Math.random() < 0.3) {
+                let particle = document.createElement('div');
+                particle.textContent = Math.random() > 0.5 ? "⚠️" : "👁️";
+                particle.style.position = "absolute";
+                particle.style.left = (sign.x - camera + Math.random() * 80) + "px";
+                particle.style.bottom = (200 + Math.random() * 60) + "px";
+                particle.style.fontSize = "14px";
+                particle.style.opacity = "0.8";
+                particle.style.pointerEvents = "none";
+                particle.style.zIndex = "25";
+                particle.style.transition = "all 1s ease-out";
+                document.getElementById("world").appendChild(particle);
+                setTimeout(() => {
+                    particle.style.opacity = "0";
+                    particle.style.transform = "translateY(-30px)";
+                    setTimeout(() => particle.remove(), 1000);
+                }, 50);
+            }
+        }
+        requestAnimationFrame(createParticlesNearSigns);
+    }
+    createParticlesNearSigns();
+    
+    // Also create a small watermark effect showing government warning in corner
+    const govWatermark = document.createElement('div');
+    govWatermark.textContent = "⚠️ AREA MONITORED BY DHS & NASA ⚠️";
+    govWatermark.style.position = "fixed";
+    govWatermark.style.bottom = "10px";
+    govWatermark.style.right = "10px";
+    govWatermark.style.fontSize = "8px";
+    govWatermark.style.backgroundColor = "rgba(0,0,0,0.5)";
+    govWatermark.style.color = "#ff8844";
+    govWatermark.style.padding = "4px 8px";
+    govWatermark.style.borderRadius = "8px";
+    govWatermark.style.fontFamily = "monospace";
+    govWatermark.style.zIndex = "100";
+    govWatermark.style.pointerEvents = "none";
+    document.body.appendChild(govWatermark);
+    </script>
+
+    <!-- Add missing void and edge elements to match original structure (they were commented in CSS but not in HTML, so adding them back for visual consistency) -->
+    <div id="void" style="position: absolute; left: 2800px; bottom: -600px; width: 400px; height: 600px; background: radial-gradient(circle at top, #111, black 70%); pointer-events: none; z-index: 5;"></div>
+    <div id="edge" style="position: absolute; left: 2780px; bottom: 200px; width: 20px; height: 200px; background: repeating-linear-gradient(90deg, #ff0000, #ff0000 10px, #ff8800 10px, #ff8800 20px); box-shadow: 0 0 20px rgba(255,0,0,0.8); z-index: 10;"></div>
+Return to <a href="flatearth.html">website</a>
+</body>
+</html>
